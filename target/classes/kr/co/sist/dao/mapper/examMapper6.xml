@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.exam6">
+	
+	<!-- OGNL: choose 
+	1번이 입력되면 10번 부서의 사원정보, 2번이 입력되면 20번 부서의 사원정보, 
+	그렇지않으면 30번 부서의 사원정보를 검색
+	-->
+	<select id="dynamicChoose" resultType="ed" parameterType="int">
+	select empno, ename, job, sal, hiredate
+	from emp 
+	where
+	<choose>
+		<when test="num eq 1">
+		deptno=10
+		</when>
+		<when test="num eq 2">
+		deptno=20
+		</when>
+		<otherwise>
+		deptno=30
+		</otherwise>
+	</choose>
+	</select>
+	<!-- OGNL: foreach 
+	부서번호-1, 직무-n를 입력받아 조건으로 사용하는 조회
+	-->
+	<select id="dynamicForeach" resultType="ed" parameterType="java.util.HashMap">
+	select empno, ename, job, sal, hiredate
+	from emp 
+	where deptno=#{deptno} 
+	<if test="jobList neq null">
+	and 
+		job in 
+		<foreach collection="jobList" open="(" item="job" separator="," close=")" index="i">
+		#{job}
+		</foreach>
+	</if>
+	</select>
+	
+	<!-- OGNL: set 
+	cp_emp4에서 사원번호에 해당하는 사원명,연봉,직무를 변경(값이 있는 데이터만 변경) 
+	-->
+	<update id="dynamicSet" parameterType="ceVO">
+	update cp_emp
+	<set>
+		<if test="ename neq null and ename neq ''">
+		ename=#{ename},
+		</if>
+		<if test="sal gt 0 ">
+		sal=#{sal}, 
+		</if>
+		<if test="job neq null and job neq ''">
+		job=#{job}
+		</if>
+	</set>
+	where empno=#{empno}
+	</update>
+	
+	<!-- PLSQL: procedure insert -->
+	<select id="procedureInsert" parameterType="empVO" statementType="CALLABLE">
+	{
+		call insert_employee( 
+			#{ empno , mode=IN, jdbcType=NUMERIC },
+			#{ ename , mode=IN, jdbcType=VARCHAR },
+			#{ job , mode=IN, jdbcType=VARCHAR },
+			#{ sal , mode=IN, jdbcType=NUMERIC },
+			#{ cnt , mode=OUT, jdbcType=NUMERIC },
+			#{ errMsg , mode=OUT, jdbcType=VARCHAR }
+			)
+	}
+	</select>
+	
+	<!-- PLSQL: procedure select -->
+	<!-- 1. procedure에서 사용할 map 선언 -->
+	<resultMap type="hashmap" id="map"/>
+	
+	<!-- 2. procedure호출 -->
+	<select id="selectDeptEmp" statementType="CALLABLE">
+	{
+		call select_dept_emp( #{deptno, mode=IN, jdbcType=NUMERIC}, 
+			#{selectEmp, mode=OUT, jdbcType=CURSOR, javaType=java.sql.ResultSet, resultMap=map}, 
+			#{msg,mode=OUT,jdbcType=VARCHAR,resultMap=map})
+	}
+	</select>
+	
+	
+</mapper>

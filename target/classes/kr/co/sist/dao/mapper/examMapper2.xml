@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.exam2">
+  <!-- Handler 호출 ss.insert("kr.co.sist.exam2.insertTestMyBatis") -->
+  <insert id="insertTestMyBatis">
+  insert into test_mybatis(num) values(seq_board.nextval)
+  </insert>
+  
+  <!-- Handler 호출 : 단일값 ss.insert("kr.co.sist.exam2.insertTestMyBatis", 값) -->
+  <insert id="insertTestMyBatis2" parameterType="int">
+  insert into test_mybatis(num) values( #{ num } )
+  </insert>
+  
+  <!-- Handler 호출 : 복합값 ss.insert("kr.co.sist.exam2.insertTestMyBatis3", eVO)
+  	parameterType이 VO인 경우에는 #{ getter명 } 
+  -->
+  <insert id="insertTestMyBatis3" parameterType="kr.co.sist.vo.EmailVO">
+  insert into test_mybatis2(num, email, subject, content) values
+  ( #{ num }, #{ email }, #{ subject }, #{ content } )
+  </insert>
+  
+</mapper>

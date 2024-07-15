@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.exam4">
+	<!-- 컬럼하나 한 행 조회 
+	emp테이블에서 사원번호를 입력받아 사원명 조회
+	-->
+	<select id="scsr" resultType="String" parameterType="int">
+		select ename
+		from emp
+		where empno=#{empno}
+	</select>
+	<!-- 컬럼하나 여러 행 조회 
+	emp테이블에서 부서번호를 입력받아 사원번호를 검색
+	-->
+	<select id="scmr" resultType="int" parameterType="int">
+		select empno
+		from emp
+		where deptno=#{deptno}
+	</select>
+	
+	<!-- 컬럼여러개 한 행 조회 
+	사원번호에 해당하는 사원의 사원명, 직무, 연봉, 입사일
+	-->
+	<select id="mcsr" resultType="ed" parameterType="int">
+		select ename, job, sal, hiredate
+		from emp
+		where empno=#{empno}
+	</select>
+	
+	<!-- 컬럼여러개 여러 행 조회
+	부서번호에 해당하는 사원의 사원번호,사원명, 직무, 연봉, 입사일
+	 -->
+	<select id="mcmr" resultType="ed" parameterType="int">
+		select empno,ename, job, sal, to_char(hiredate,'yyyy-mm-dd q"분기"')  hiredateStr
+		from emp
+		where deptno=#{deptno}
+	</select>
+	
+	<!-- 공통쿼리문을 작성 ( 모든쿼리문 사용가능 ) -->	
+	<sql id="selectEmp">
+		select empno, ename, job, sal, 
+			   to_char(hiredate,'yyyy-mm-dd q"분기"')  hiredateStr
+		from emp
+	</sql>
+	
+	<!-- 작은 값 조회 
+	사원테이블에서 입력된 연봉보다 적게받는 사원의 사원번호,사원명,직무,연봉,입사일을 조회
+	-->
+	<select id="lessThan" resultType="ed" parameterType="int">
+	<include refid="selectEmp"/>
+	<![CDATA[
+		where sal < #{sal}
+	]]>
+	</select>
+	<!-- 큰 값 조회 -->
+	<select id="greaterThan" resultType="ed" parameterType="int">
+	<include refid="selectEmp"/>
+	<![CDATA[
+		where sal > #{sal}
+	]]>
+	</select>
+	<!-- like 
+	사원테이블에서 사원명에 입력한 글자가 있는 사원의
+	사원번호, 사원명, 직무, 연봉, 입사일을 조회 
+	-->
+	<select id="like" resultType="ed" parameterType="String">
+	<include refid="selectEmp"/>
+	where ename like '%'||#{ ename }||'%'
+	</select>
+	
+	<!-- subQuery -->
+	
+	<!-- join -->
+	
+	<!-- join+ subquery -->
+	
+	<!-- 테이블명이 동적일때  $ vs #의 차이 -->
+	
+	<!-- OGNL: dynamic query -->
+	
+	<!-- OGNL: if -->
+	
+	<!-- OGNL: choose -->
+	
+	<!-- OGNL: foreach -->
+	
+	<!-- OGNL: set -->
+	
+	<!-- PLSQL: procedure -->
+</mapper>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.exam5">
+
+	<!-- resultMap : 조회되는 컬럼과 setter method를 미리 연결하는 노드 -->
+	<resultMap type="bd" id="bdResult">
+		<result column="NUM" property="num"/>
+		<result column="TITLE" property="title"/>
+		<result column="CONTENT" property="content"/>
+		<result column="ID" property="id"/>
+		<result column="INPUT_DATE" property="input_date"/>
+		<result column="CNT" property="cnt"/>
+	</resultMap>
+	
+	<!-- subquery : 
+	board테이블에서 가장 마지막에 쓴 글 10개만 조회 
+	SqlSession.selectList("bdResult");
+	-->
+	<select id="subquery" resultMap="bdResult">
+		select num, title, id, input_date, cnt
+		from (select num, title, id, input_date, cnt,
+			 	     row_number() over(order by input_date desc) rnum
+			  from board)
+		where rnum between 1 and 10
+	</select>
+	
+	<resultMap type="jd" id="jdResult">
+		<result column="empno" property="empno"/>
+		<result column="sal" property="sal"/>
+		<result column="deptno" property="deptno"/>
+		<result column="ename" property="ename"/>
+		<result column="dname" property="dname"/>
+		<result column="loc" property="loc"/>
+	</resultMap>
+	<!-- join :
+	부서번호를 입력 받아 사원번호, 사원명, 연봉, 부서번호, 부서명, 위치 검색
+	-->
+	<select id="join" resultMap="jdResult" parameterType="int">
+		select empno, ename, sal, d.deptno, dname, loc
+		from dept d, emp e
+		where (e.deptno = d.deptno) and d.deptno=#{ deptno }
+	</select>
+	
+	<!-- join+subquery :
+	제조국을 입력받아 제조국, 제조사, 모델명, 연식, 가격, 옵션, 입력일을 조회
+	단, 마지막에 입력된 차량부터 10건만 조회
+	-->
+	<resultMap type="cd" id="cdResult">
+		<result column="COUNTRY" property="country"/>
+		<result column="MAKER" property="maker"/>
+		<result column="MODEL" property="model"/>
+		<result column="CAR_YEAR" property="car_year"/>
+		<result column="PRICE" property="price"/>
+		<result column="CAR_OPTION" property="car_option"/>
+		<result column="CAR_IMG" property="car_img"/>
+		<result column="HIREDATE" property="hiredate"/>
+	</resultMap>
+	
+	<select id="join_subquery" resultMap="cdResult" parameterType="String">
+	select country, maker, model, car_year, price, car_option, car_img, hiredate
+	from (select cc.country, cc.maker, cma.model, cmo.car_year, cmo.price,
+			 	 cmo.car_option, cmo.car_img, cmo.hiredate,
+			 	 row_number() over(order by cmo.hiredate desc) rnum
+		  from   car_country cc, car_maker cma, car_model cmo
+		  where  (cma.maker=cc.maker and cmo.model=cma.model)
+				  and cc.country=#{ country })
+	where rnum between 1 and 10
+	</select>
+	
+	<!-- 테이블명이 동적일 때 :
+	emp 또는 cp_emp4테이블을 검색
+	empno, ename, job, sal, hiredate검색
+	-->
+	<select id="dynamicTable" resultType="ed" parameterType="String">
+	select empno, ename, job, sal, hiredate
+	from ${ dname }
+	</select>
+	
+	<!-- OGNL : dynamic query -->
+	<!-- OGNL : if 
+	부서번호가 존재하면( 0이 아니면 ) 해당 부서의 모든 사원을 검색하고
+	그렇지 않으면 모든 부서의 모든 사원을 검색
+	-->
+	<select id="dynamicIf" resultType="ed" parameterType="int">
+	select empno, ename, job, sal, hiredate
+	from emp
+	<where>
+		<!-- <if test="deptno != 0"> -->
+		<if test="deptno neq 0">
+		deptno=#{ deptno }
+		</if>
+	</where>
+	
+	<!-- OGNL : if 
+	직무에 입력되는 값이 있다면 ( null이 아니거나 ''가 아니면 ) 해당 직무의 모든 사원을 검색하고
+	그렇지 않으면 모든 사원을 검색
+	-->
+	</select>
+	<select id="dynamicIf2" resultType="ed" parameterType="String">
+	select empno, ename, job, sal, hiredate
+	from emp
+	<where>
+		<!-- <if test="job != null and job != ''"> && 는 사용할 수 없다.-->
+		<!-- <if test="job != null || job != ''"> || 는 사용할 수 있다.-->
+		<if test="job != null and job != ''">
+		job=#{ job }
+		</if>
+	</where>
+	</select>
+	<!-- OGNL : choose -->
+	<!-- OGNL : foreach -->
+	<!-- OGNL : set -->
+	<!-- OGNL : Procedure -->
+</mapper>

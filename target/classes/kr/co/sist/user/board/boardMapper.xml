@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.board">
+	<!-- 게시글의 총 수 -->
+	<select id="selectTotalCount" resultType="int" parameterType="searchVO">
+	select count(*) cnt from board
+	<where>
+		<if test="keyword neq null and keyword neq ''">
+				<choose>
+					<when test="field eq 0">
+						title
+					</when>
+					<when test="field eq 1">
+						content 
+					</when>
+					<otherwise>
+						id
+					</otherwise>
+				</choose>
+				like '%'||#{ keyword }||'%'
+		</if>
+	</where>
+	</select>
+	<!-- 게시글 목록 
+	
+	-->
+	<select id="selectBoardList" resultType="boardDomain" parameterType="searchVO">
+	select  NUM, TITLE, ID, INPUT_DATE, CNT, rnum
+	from (select NUM, TITLE, ID, INPUT_DATE, CNT,	
+			row_number() over(order by input_date desc) rnum
+			from	board
+			<where>
+			<if test="keyword neq null and keyword neq ''">
+				instr( 
+				<choose>
+					<when test="field eq 0">
+						title
+					</when>
+					<when test="field eq 1">
+						content 
+					</when>
+					<otherwise>
+						id
+					</otherwise>
+				</choose>
+				,#{ keyword } ) > 0
+			</if>
+			</where>
+	
+	) where rnum between #{ startNum } and #{ endNum }
+	
+	</select>
+	<!-- 추가 -->
+	<insert id="insertBoard" parameterType="boardVO">
+	insert into board(num,title,content,id,cnt) 
+	values(seq_board.nextval,#{ title },#{ content },#{ id },#{ cnt })
+	</insert>
+	
+	
+	<!-- 상세보기 
+	BoardDomain selectDetailBoard( int seq )
+	-->
+	<select id="selectDetailBoard" resultType="boardDomain" parameterType="int">
+	select TITLE, ID, CONTENT, INPUT_DATE, CNT
+	from board	
+	where num=#{ num }
+	</select>
+	
+	<!-- 조회수 cnt 누적 -->
+	<update id="updateCnt" parameterType="int">
+	update board  set cnt=cnt+1
+	where num=#{ num }
+	</update>
+	
+	<!-- 변경 -->
+	<update id="updateBoard" parameterType="boardVO">
+	update board
+	set title=#{ title }, content=#{ content }, cnt=#{ cnt }
+	where num=#{ num }	and id=#{ id }
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="deleteBoard" parameterType="boardVO">
+	delete board
+	where num=#{ num } and id=#{ id }	
+	</delete>
+	
+</mapper>
